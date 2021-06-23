@@ -52,10 +52,7 @@ class DiscountedCashFlowModel(object):
         # calculate the fair_value using DCF model
 
         # 1. calculate a yearly discount factor using the WACC
-
         beta = self.stock.get_beta()
-        if beta is None:
-            beta = 0
         DF = 1 / (1 + self.stock.lookup_wacc_by_beta(beta))
         #print('DF: ', DF)
         # 2. Get the Free Cash flow
@@ -85,8 +82,6 @@ class DiscountedCashFlowModel(object):
 
         #print('PV: ', PV)
         total_shares = self.stock.get_num_shares_outstanding()
-        if total_shares is None:
-            return 0
         # 7. Return the stock fair value as PV divided by num of shares outstanding
         FV = PV / total_shares
         print('FV: ', FV)
@@ -102,7 +97,7 @@ def _test():
     stock = Stock(symbol, 'annual')
     model = DiscountedCashFlowModel(stock, as_of_date)
 
-    short_term_growth_rate = .14
+    short_term_growth_rate = .1469
     medium_term_growth_rate = short_term_growth_rate / 2
     long_term_growth_rate = 0.04
 

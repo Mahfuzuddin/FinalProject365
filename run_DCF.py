@@ -32,18 +32,29 @@ def run():
         model = DiscountedCashFlowModel(stock, as_of_date)
 
         short_term_growth_rate = float(row['EPS Next 5Y'])
-        if isinstance(short_term_growth_rate, float):
-            short_term_growth_rate = float(row['EPS Next 5Y'])
-        else:
-            short_term_growth_rate = 0
+        if short_term_growth_rate is None:
+            fair_value = None
+            FV.append(fair_value)
+            df = pd.DataFrame(list(zip(symbol, sector, epsNext5Y, FV)),
+                              columns=['Symbol', 'Sector', 'EPS Next 5Y', 'Fair Value'])
+            df.to_csv(output_fname, index=False, header=True)
+            continue
 
         # print(short_term_growth_rate)
         medium_term_growth_rate = short_term_growth_rate / 2
         long_term_growth_rate = 0.04
 
         model.set_FCC_growth_rate(short_term_growth_rate, medium_term_growth_rate, long_term_growth_rate)
+        try:
+            fair_value = model.calc_fair_value()
+        except:
+            fair_value = None
+            FV.append(fair_value)
+            df = pd.DataFrame(list(zip(symbol, sector, epsNext5Y, FV)),
+                              columns=['Symbol', 'Sector', 'EPS Next 5Y', 'Fair Value'])
+            df.to_csv(output_fname, index=False, header=True)
+            continue
 
-        fair_value = model.calc_fair_value()
         FV.append(fair_value)
 
         df = pd.DataFrame(list(zip(symbol, sector, epsNext5Y, FV)),
