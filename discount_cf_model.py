@@ -52,12 +52,9 @@ class DiscountedCashFlowModel(object):
         # calculate the fair_value using DCF model
 
         # 1. calculate a yearly discount factor using the WACC
-        beta = self.stock.get_beta()
-        DF = 1 / (1 + self.stock.lookup_wacc_by_beta(beta))
-        #print('DF: ', DF)
+        DF = 1 / (1 + self.stock.lookup_wacc_by_beta(self.stock.get_beta()))
         # 2. Get the Free Cash flow
         FCC = self.stock.get_free_cashflow()
-        #print('FCC: ', FCC)
         # 3. Sum the discounted value of the FCC for the first 5 years using the short term growth rate
         DCF = 0
         # print('short term: ', self.short_term_growth_rate)
@@ -65,22 +62,18 @@ class DiscountedCashFlowModel(object):
         # print('long term: ', self.long_term_growth_rate)
         for i in range(1, 6):
             DCF += FCC * (1 + self.short_term_growth_rate) ** i * DF ** i
-        #print('DCF 1-5 :', DCF)
+
         # 4. Add the discounted value of the FCC from year 6 to the 10th year using the medium term growth rate
         CF5 = FCC * (1 + self.short_term_growth_rate) ** 5
         for i in range(1, 6):
             DCF += CF5 * (1 + self.medium_term_growth_rate) ** i * DF ** (i + 5)
-        #print('DCF 6-10 :', DCF)
         # 5. Add the discounted value of the FCC from year 10 to the 20th year using the long term growth rate
         CF10 = CF5 * (1 + self.medium_term_growth_rate) ** 5
         for i in range(1, 11):
             DCF += CF10 * (1 + self.long_term_growth_rate) ** i * DF ** (i + 10)
-        #print('DCF 10-20 :', DCF)
         # 6. Compute the PV as cash + short term investments - total debt + the above sum of discounted free cash flow
-        PV = (self.stock.get_cash_and_cash_equivalent() + self.stock.yfinancial.get_short_term_investments()
-              - self.stock.get_total_debt() + DCF)
+        PV = (self.stock.get_cash_and_cash_equivalent() - self.stock.get_total_debt() + DCF)
 
-        #print('PV: ', PV)
         total_shares = self.stock.get_num_shares_outstanding()
         # 7. Return the stock fair value as PV divided by num of shares outstanding
         FV = PV / total_shares
@@ -92,19 +85,31 @@ class DiscountedCashFlowModel(object):
 
 
 def _test():
-    symbol = 'AAPL'
-    as_of_date = datetime.date(2021, 4, 21)
+
+    symbol = 'CAT'
+    as_of_date = datetime.date(2021, 6, 15)
+
     stock = Stock(symbol, 'annual')
     model = DiscountedCashFlowModel(stock, as_of_date)
 
-    short_term_growth_rate = .1469
-    medium_term_growth_rate = short_term_growth_rate / 2
-    long_term_growth_rate = 0.04
+    print("Shares ", stock.get_num_shares_outstanding())
 
-    model.set_FCC_growth_rate(short_term_growth_rate, medium_term_growth_rate, long_term_growth_rate)
+    print("FCC ", stock.get_free_cashflow())
+    beta = stock.get_beta()
+    wacc = stock.lookup_wacc_by_beta(beta)
+    print("Beta ", beta)
+    print("WACC ", wacc)
 
-    fair_value = model.calc_fair_value()
-    print(fair_value)
+    print("Total debt ", stock.get_total_debt())
+
+    print("cash ", stock.get_cash_and_cash_equivalent())
+
+    # look up from Finviz
+    eps5y = 0.1906
+    model.set_FCC_growth_rate(eps5y, eps5y/2, 0.04)
+
+    model_price = model.calc_fair_value()
+    print(model_price)
 
 
 if __name__ == "__main__":

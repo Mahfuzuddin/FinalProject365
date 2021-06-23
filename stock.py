@@ -66,7 +66,7 @@ class Stock(object):
             # end TODO
             return result
         except:
-            return 0
+            return None
 
     def get_free_cashflow(self):
         """
@@ -76,10 +76,10 @@ class Stock(object):
         # TODO
         try:
             result = (self.yfinancial.get_operating_cashflow() + self.yfinancial.get_capital_expenditures())
-        # end TODO
+            # end TODO
             return result
         except:
-            return 0
+            return None
 
     def get_cash_and_cash_equivalent(self):
         '''
@@ -87,12 +87,9 @@ class Stock(object):
         '''
         result = None
         # TODO
-        try:
-            result = (self.yfinancial.get_operating_cashflow() + self.yfinancial.get_capital_expenditures())
-            # end TODO
-            return result
-        except:
-            return 0;
+        result = (self.yfinancial.get_cash() + self.yfinancial.get_short_term_investments())
+        # end TODO
+        return result
 
     def get_num_shares_outstanding(self):
         '''
@@ -105,7 +102,7 @@ class Stock(object):
             # end TODO
             return result
         except:
-            return 0;
+            return None
 
     def get_beta(self):
         '''
@@ -118,7 +115,7 @@ class Stock(object):
             # end TODO
             return result
         except:
-            return 0
+            return None
 
     def lookup_wacc_by_beta(self, beta):
         '''
@@ -140,7 +137,7 @@ class Stock(object):
             result = 0.08
         elif (1.5 <= beta and beta < 1.6):
             result = 0.085
-        elif (beta >= 1.6):
+        elif (beta > 1.6):
             result = 0.09
         # end TODO
         return result
@@ -151,9 +148,6 @@ def _test():
 
     stock = Stock(symbol, 'annual')
     print(stock.get_total_debt())
-    print(stock.get_num_shares_outstanding())
-    print(stock.get_free_cashflow())
-    print(stock.get_daily_hist_price())
 
 
 if __name__ == "__main__":
